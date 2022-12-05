@@ -2,6 +2,7 @@ services:
   minio:
     container_name: minio
     image: minio/minio
+    mem_limit: 1g
     ports:
       - 9000:9000
       - 9001:9001
@@ -20,7 +21,7 @@ services:
     image: cassandra
     container_name: cassandra-beijing
     hostname: cassandra-beijing
-    mem_limit: 1g
+    mem_limit: 2g
     healthcheck:
       test: [ "CMD", "cqlsh", "-e", "describe keyspaces" ]
       interval: 5s
@@ -46,7 +47,7 @@ services:
     image: cassandra
     container_name: cassandra-hong-kong
     hostname: cassandra-hong-kong
-    mem_limit: 1g
+    mem_limit: 2g
     healthcheck:
       test: [ "CMD", "cqlsh", "-e", "describe keyspaces" ]
       interval: 5s
@@ -60,9 +61,9 @@ services:
       - ./data/cassandra-hong-kong:/var/lib/cassandra
       - ./config/cassandra-hong-kong:/etc/cassandra
     environment: *environment
-    # depends_on:
-    #   cassandra-beijing:
-    #     condition: service_healthy
+    depends_on:
+      cassandra-beijing:
+        condition: service_started
     # dbms-beijing:
     #   build: dbms
     #   ports:

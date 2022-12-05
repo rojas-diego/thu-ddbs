@@ -1,6 +1,10 @@
 #!/bin/bash
 
-mc alias set thuddbs http://host.docker.internal:9000 admin password
-mc mirror ./data/minio 
+set -e
 
-docker exec -d minio1 "/bin/bash /usr/bin/mc config host add srv http://localhost:9000 user pass && /usr/bin/mc mb -p srv/bucket"
+if [ "$#" -ne 1 ]; then
+    echo "usage: ./bulk-load-minio.sh /absolute/path/to/folder"
+    exit 1
+fi
+
+docker run --entrypoint "/bin/bash" -v "$1:/data" --rm minio/mc "-c" "/usr/bin/mc alias set thuddbs http://host.docker.internal:9000 admin password && /usr/bin/mc mirror /data thuddbs/thuddbs"
