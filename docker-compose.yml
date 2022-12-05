@@ -1,0 +1,83 @@
+services:
+  minio:
+    container_name: minio
+    image: minio/minio
+    ports:
+      - 9000:9000
+      - 9001:9001
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: password
+    command:
+      - "server"
+      - "/data/minio"
+      - "--console-address"
+      - ":9001"
+    volumes:
+      - ./data/minio:/data/minio
+
+  cassandra-beijing:
+    image: cassandra
+    container_name: cassandra-beijing
+    hostname: cassandra-beijing
+    mem_limit: 1g
+    healthcheck:
+      test: [ "CMD", "cqlsh", "-e", "describe keyspaces" ]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+    networks:
+      - cassandra
+    ports:
+      - 9042:9042
+    volumes:
+      - ./data/cassandra-beijing:/var/lib/cassandra # This is the volume that will persist data for cassandra-beijing node
+      - ./config/cassandra-beijing:/etc/cassandra # Use your own config files for full control
+    environment:
+      &environment
+      CASSANDRA_SEEDS: "cassandra-beijing,cassandra-hong-kong" # The first two nodes will be seeds
+      CASSANDRA_CLUSTER_NAME: THUDDBS
+      CASSANDRA_DC: DC1
+      CASSANDRA_RACK: RC1
+      CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+      CASSANDRA_NUM_TOKENS: 128
+
+  cassandra-hong-kong:
+    image: cassandra
+    container_name: cassandra-hong-kong
+    hostname: cassandra-hong-kong
+    mem_limit: 1g
+    healthcheck:
+      test: [ "CMD", "cqlsh", "-e", "describe keyspaces" ]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+    networks:
+      - cassandra
+    ports:
+      - 9043:9042
+    volumes:
+      - ./data/cassandra-hong-kong:/var/lib/cassandra
+      - ./config/cassandra-hong-kong:/etc/cassandra
+    environment: *environment
+    # depends_on:
+    #   cassandra-beijing:
+    #     condition: service_healthy
+    # dbms-beijing:
+    #   build: dbms
+    #   ports:
+    #     - 3000:3000
+    #   environment:
+    #     DBMS_LOCATION: beijing
+    #     DBMS_PEER_ADDRESS: dbms-hong-kong:3000
+
+    # dbms-hong-kong:
+    #   build: dbms
+    #   ports:
+    #     - 3001:3000
+    #   environment:
+    #     DBMS_LOCATION: hong-kong
+    #     DBMS_PEER_ADDRESS: dbms-beijing:3000
+
+networks:
+  cassandra:

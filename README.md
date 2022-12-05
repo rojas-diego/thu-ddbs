@@ -1,24 +1,15 @@
-# 清华大学微博
+# THUDDBS
 
-Final project for the Distributed Database Systems course at Tsinghua University (2022).
+## Minio
 
-# Usage
-
-Requires a working `minikube` installation. To start the application, run the following commands.
-
+To bulk load articles, images and videos into Minio run the following command
 ```
-minikube start
-kubectl apply -f kube
+./bulk-load-minio.sh /absolute/path/to/folder
 ```
 
-# Services
+## Compose
 
-Access Grafana (Metrics and Monitoring) at http://localhost:3000.
+Run the project using the following command
 ```
-kubectl port-forward services/grafana 3000:3000
-```
-
-Access Prometheus (Metrics and Monitoring) at http://localhost:9090.
-```
-kubectl port-forward services/grafana 9090:9090
+docker compose up
 ```
