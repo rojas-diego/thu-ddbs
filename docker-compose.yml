@@ -64,21 +64,24 @@ services:
     depends_on:
       cassandra-beijing:
         condition: service_started
-    # dbms-beijing:
-    #   build: dbms
-    #   ports:
-    #     - 3000:3000
-    #   environment:
-    #     DBMS_LOCATION: beijing
-    #     DBMS_PEER_ADDRESS: dbms-hong-kong:3000
 
-    # dbms-hong-kong:
-    #   build: dbms
-    #   ports:
-    #     - 3001:3000
-    #   environment:
-    #     DBMS_LOCATION: hong-kong
-    #     DBMS_PEER_ADDRESS: dbms-beijing:3000
+  redis-beijing:
+    image: redis
+    container_name: redis-beijing
+    ports:
+      - 6379:6379
+    restart: always
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+
+  redis-hong-kong:
+    image: redis
+    container_name: redis-hong-kong
+    ports:
+      - 6380:6379
+    restart: always
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
 
 networks:
   cassandra:
