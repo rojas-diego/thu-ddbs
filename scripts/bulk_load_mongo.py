@@ -26,6 +26,42 @@ def bulk_load(database: Database, coll: str):
     print()
 
 
+def generate_be_read(database: Database):
+    database["read"].aggregate(
+        [
+            {"$group": {
+                "_id": "$aid",
+                "category": {"$first": "$category"},
+                "readNum": {"$sum": 1},
+                "totalReadTimeLength": {"$sum": "$readTimeLength"},
+                "agreeNum": {"$sum": {"$toInt": "$agreeOrNot"}},
+                "commentNum": {"$sum": {"$toInt": "$commentOrNot"}},
+                "shareNum": {"$sum": {"$toInt": "$shareOrNot"}},
+                "readUidList": {"$addToSet": "$uid"}
+            }},
+            {"$merge": {"into": "beRead"}},
+        ],
+        allowDiskUse=True
+    )
+
+
+def generate_popular_rank(database: Database):
+    for period in [('%Y-%m', 'monthly'), ('%Y-w%U', 'weekly'), ('%Y-%m-%d', 'daily')]:
+        print('> %s' % period[1])
+        database["read"].aggregate([
+            {"$group": {
+                "_id": {"id": "$aid", "date": {"$dateToString": {"format": period[0], "date": {"$toDate": {"$toLong": "$timestamp"}}}}},
+                "count": {"$sum": 1}}},
+            {"$addFields": {
+                "granularity": period[1]}},
+            {"$sort": {
+                "count": -1,
+            }},
+            {"$merge": {
+                "into": "popularRank"}}
+        ], allowDiskUse=True)
+
+
 if __name__ == "__main__":
     data_directory = sys.argv[1] if len(sys.argv) == 2 else './data'
     mongo_address = sys.argv[2] if len(
@@ -40,3 +76,8 @@ if __name__ == "__main__":
     bulk_load(database, "article")
     print("-- Bulk loading reads")
     bulk_load(database, "read")
+
+    print("-- Generating beRead")
+    generate_be_read(database)
+    print("-- Generating popularRank")
+    generate_popular_rank(database)

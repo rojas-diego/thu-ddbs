@@ -84,4 +84,18 @@ docker exec -it mongo-beijing-router bash -c "echo '\
     sh.moveChunk(\"thu-ddbs.read\", {region:\"Beijing\"}, \"beijing-shard-rs\")
     sh.moveChunk(\"thu-ddbs.read\", {region:\"Hong Kong\"}, \"hong-kong-shard-rs\")
 
+    sh.shardCollection(\"thu-ddbs.beRead\", {category: 1})
+    sh.splitAt(\"thu-ddbs.beRead\", {category:\"science\"})
+    sh.splitAt(\"thu-ddbs.beRead\", {category:\"technology\"})
+    sh.moveChunk(\"thu-ddbs.beRead\", {category:\"science\"}, \"beijing-shard-rs\")
+    sh.moveChunk(\"thu-ddbs.beRead\", {category:\"technology\"}, \"shared-shard-rs\")
+
+    sh.shardCollection(\"thu-ddbs.popularRank\", {granularity: 1})
+    sh.splitAt(\"thu-ddbs.popularRank\", {granularity:\"daily\"})
+    sh.splitAt(\"thu-ddbs.popularRank\", {granularity:\"weekly\"})
+    sh.splitAt(\"thu-ddbs.popularRank\", {granularity:\"monthly\"})
+    sh.moveChunk(\"thu-ddbs.popularRank\", {granularity:\"daily\"}, \"beijing-shard-rs\")
+    sh.moveChunk(\"thu-ddbs.popularRank\", {granularity:\"weekly\"}, \"hong-kong-shard-rs\")
+    sh.moveChunk(\"thu-ddbs.popularRank\", {granularity:\"monthly\"}, \"hong-kong-shard-rs\")
+
     ' | mongo"

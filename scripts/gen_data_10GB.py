@@ -11,6 +11,7 @@ NUM_IMAGES = 600
 
 uid_region = {}
 aid_lang = {}
+aid_category = {}
 
 
 def gen_an_user(i):
@@ -26,7 +27,6 @@ def gen_an_user(i):
     user = {}
     user["timestamp"] = str(timeBegin + i)
     user["_id"] = 'u'+str(i)
-    user["uid"] = str(i)
     user["name"] = "user%d" % i
     user["gender"] = "male" if random.random() > 0.33 else "female"
     user["email"] = "email%d" % i
@@ -39,7 +39,7 @@ def gen_an_user(i):
     user["preferTags"] = "tags%d" % int(random.random() * 50)
     user["obtainedCredits"] = str(int(random.random() * 100))
 
-    uid_region[user["uid"]] = user["region"]
+    uid_region[user["_id"]] = user["region"]
     return user
 
 
@@ -54,7 +54,6 @@ def gen_an_article(i):
     article = {}
     article["_id"] = 'a'+str(i)
     article["timestamp"] = str(timeBegin + i)
-    article["aid"] = str(i)
     article["title"] = "title%d" % i
     article["category"] = "science" if random.random() > 0.55 else "technology"
     article["abstract"] = "abstract of article %d" % i
@@ -76,7 +75,8 @@ def gen_an_article(i):
     if random.randint(0, 3) == 1:
         article["video"] = "video" + str(random.randint(1, 2)) + ".flv"
 
-    aid_lang[article["aid"]] = article["language"]
+    aid_lang[article["_id"]] = article["language"]
+    aid_category[article["_id"]] = article["category"]
     return article
 
 
@@ -94,21 +94,22 @@ def gen_an_read(i):
     read = {}
     read["timestamp"] = str(timeBegin + i*10000)
     read["_id"] = 'r'+str(i)
-    read["uid"] = str(int(random.random() * NUM_USERS))
-    read["aid"] = str(int(random.random() * NUM_ARTICLES))
+    read["uid"] = 'u'+str(int(random.random() * NUM_USERS))
+    read["aid"] = 'a'+str(int(random.random() * NUM_ARTICLES))
 
     region = uid_region[read["uid"]]
     lang = aid_lang[read["aid"]]
     ps = p[region + lang]
 
     read["region"] = region
+    read["category"] = aid_category[read["aid"]]
     if (random.random() > ps[0]):
         return gen_an_read(i)
     else:
-        read["readTimeLength"] = str(int(random.random() * 100))
-        read["agreeOrNot"] = "1" if random.random() < ps[1] else "0"
-        read["commentOrNot"] = "1" if random.random() < ps[2] else "0"
-        read["shareOrNot"] = "1" if random.random() < ps[3] else "0"
+        read["readTimeLength"] = int(random.random() * 100)
+        read["agreeOrNot"] = True if random.random() < ps[1] else False
+        read["commentOrNot"] = True if random.random() < ps[2] else False
+        read["shareOrNot"] = True if random.random() < ps[3] else False
         read["commentDetail"] = "comments to this article: (" + \
             read["uid"] + "," + read["aid"] + ")"
     return read
