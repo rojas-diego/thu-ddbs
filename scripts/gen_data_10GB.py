@@ -25,7 +25,7 @@ def gen_an_user(i):
     timeBegin = 1506328859000
     user = {}
     user["timestamp"] = str(timeBegin + i)
-    user["id"] = 'u'+str(i)
+    user["_id"] = 'u'+str(i)
     user["uid"] = str(i)
     user["name"] = "user%d" % i
     user["gender"] = "male" if random.random() > 0.33 else "female"
@@ -52,7 +52,7 @@ def gen_an_article(i):
     """
     timeBegin = 1506000000000
     article = {}
-    article["id"] = 'a'+str(i)
+    article["_id"] = 'a'+str(i)
     article["timestamp"] = str(timeBegin + i)
     article["aid"] = str(i)
     article["title"] = "title%d" % i
@@ -93,7 +93,7 @@ def gen_an_read(i):
     timeBegin = 1506332297000
     read = {}
     read["timestamp"] = str(timeBegin + i*10000)
-    read["id"] = 'r'+str(i)
+    read["_id"] = 'r'+str(i)
     read["uid"] = str(int(random.random() * NUM_USERS))
     read["aid"] = str(int(random.random() * NUM_ARTICLES))
 
@@ -101,6 +101,7 @@ def gen_an_read(i):
     lang = aid_lang[read["aid"]]
     ps = p[region + lang]
 
+    read["region"] = region
     if (random.random() > ps[0]):
         return gen_an_read(i)
     else:

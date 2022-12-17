@@ -2,7 +2,6 @@ services:
   minio:
     container_name: minio
     image: minio/minio
-    mem_limit: 1g
     ports:
       - 9000:9000
       - 9001:9001
@@ -15,55 +14,119 @@ services:
       - "--console-address"
       - ":9001"
     volumes:
-      - ./data/minio:/data/minio
+      - minio:/data/minio
 
-  cassandra-beijing:
-    image: cassandra
-    container_name: cassandra-beijing
-    hostname: cassandra-beijing
-    mem_limit: 2g
-    healthcheck:
-      test: [ "CMD", "cqlsh", "-e", "describe keyspaces" ]
-      interval: 5s
-      timeout: 5s
-      retries: 60
-    networks:
-      - cassandra
+  mongo-beijing-router:
+    image: mongo
+    container_name: mongo-beijing-router
+    hostname: mongo-beijing-router
+    command: mongos --configdb config-rs/mongo-beijing-config:27017,mongo-hong-kong-config:27017 --bind_ip_all --port 27017
     ports:
-      - 9042:9042
-    volumes:
-      - ./data/cassandra-beijing:/var/lib/cassandra # This is the volume that will persist data for cassandra-beijing node
-      - ./config/cassandra-beijing:/etc/cassandra # Use your own config files for full control
-    environment:
-      &environment
-      CASSANDRA_SEEDS: "cassandra-beijing,cassandra-hong-kong" # The first two nodes will be seeds
-      CASSANDRA_CLUSTER_NAME: THUDDBS
-      CASSANDRA_DC: DC1
-      CASSANDRA_RACK: RC1
-      CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
-      CASSANDRA_NUM_TOKENS: 128
-
-  cassandra-hong-kong:
-    image: cassandra
-    container_name: cassandra-hong-kong
-    hostname: cassandra-hong-kong
-    mem_limit: 2g
-    healthcheck:
-      test: [ "CMD", "cqlsh", "-e", "describe keyspaces" ]
-      interval: 5s
-      timeout: 5s
-      retries: 60
-    networks:
-      - cassandra
-    ports:
-      - 9043:9042
-    volumes:
-      - ./data/cassandra-hong-kong:/var/lib/cassandra
-      - ./config/cassandra-hong-kong:/etc/cassandra
-    environment: *environment
+      - 27017:27017
     depends_on:
-      cassandra-beijing:
-        condition: service_started
+      - mongo-beijing-config
+      - mongo-hong-kong-config
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    restart: always
+
+  mongo-hong-kong-router:
+    image: mongo
+    container_name: mongo-hong-kong-router
+    hostname: mongo-hong-kong-router
+    command: mongos --configdb config-rs/mongo-beijing-config:27017,mongo-hong-kong-config:27017 --bind_ip_all --port 27017
+    ports:
+      - 27018:27017
+    depends_on:
+      - mongo-beijing-config
+      - mongo-hong-kong-config
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    restart: always
+
+  mongo-beijing-config:
+    image: mongo
+    container_name: mongo-beijing-config
+    hostname: mongo-beijing-config
+    command: mongod --configsvr --replSet config-rs --port 27017 --dbpath /data/db
+    expose:
+      - 27017
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - mongo-beijing-config:/data/db
+    restart: always
+
+  mongo-hong-kong-config:
+    image: mongo
+    container_name: mongo-hong-kong-config
+    hostname: mongo-hong-kong-config
+    command: mongod --configsvr --replSet config-rs --port 27017 --dbpath /data/db
+    expose:
+      - 27017
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - mongo-hong-kong-config:/data/db
+    restart: always
+
+  mongo-shared-shard-1:
+    image: mongo
+    container_name: mongo-shared-shard-1
+    hostname: mongo-shared-shard-1
+    command: mongod --shardsvr --replSet shared-shard-rs --port 27017 --dbpath /data/db
+    expose:
+      - 27017
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - mongo-shared-shard-1:/data/db
+    restart: always
+
+  mongo-beijing-shard-1:
+    image: mongo
+    container_name: mongo-beijing-shard-1
+    hostname: mongo-beijing-shard-1
+    command: mongod --shardsvr --replSet beijing-shard-rs --port 27017 --dbpath /data/db
+    expose:
+      - 27017
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - mongo-beijing-shard-1:/data/db
+    restart: always
+
+  mongo-beijing-shard-2:
+    image: mongo
+    container_name: mongo-beijing-shard-2
+    hostname: mongo-beijing-shard-2
+    command: mongod --shardsvr --replSet beijing-shard-rs --port 27017 --dbpath /data/db
+    expose:
+      - 27017
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - mongo-beijing-shard-2:/data/db
+    restart: always
+
+  mongo-hong-kong-shard-1:
+    image: mongo
+    container_name: mongo-hong-kong-shard-1
+    hostname: mongo-hong-kong-shard-1
+    command: mongod --shardsvr --replSet hong-kong-shard-rs --port 27017 --dbpath /data/db
+    expose:
+      - 27017
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - mongo-hong-kong-shard-1:/data/db
+    restart: always
+
+  mongo-hong-kong-shard-2:
+    image: mongo
+    container_name: mongo-hong-kong-shard-2
+    hostname: mongo-hong-kong-shard-2
+    command: mongod --shardsvr --replSet hong-kong-shard-rs --port 27017 --dbpath /data/db
+    expose:
+      - 27017
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - mongo-hong-kong-shard-2:/data/db
+    restart: always
 
   redis-beijing:
     image: redis
@@ -83,5 +146,17 @@ services:
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
 
-networks:
-  cassandra:
+volumes:
+  mongo-beijing-router:
+  mongo-hong-kong-router:
+
+  mongo-beijing-config:
+  mongo-hong-kong-config:
+
+  mongo-shared-shard-1:
+  mongo-beijing-shard-1:
+  mongo-beijing-shard-2:
+  mongo-hong-kong-shard-1:
+  mongo-hong-kong-shard-2:
+
+  minio:
