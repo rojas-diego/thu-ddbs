@@ -118,17 +118,17 @@ def gen_an_read(i):
 if not os.path.exists('./data'):
     os.mkdir('./data')
 
-with open("data/user.dat", "w+") as f:
+with open("data/user.dat", "w") as f:
     for i in range(NUM_USERS):
         json.dump(gen_an_user(i), f)
         f.write("\n")
 
-with open("data/article.dat", "w+") as f:
+with open("data/article.dat", "w") as f:
     for i in range(NUM_ARTICLES):
         json.dump(gen_an_article(i), f)
         f.write("\n")
 
-with open("data/read.dat", "w+") as f:
+with open("data/read.dat", "w") as f:
     for i in range(NUM_READS):
         json.dump(gen_an_read(i), f)
         f.write("\n")
