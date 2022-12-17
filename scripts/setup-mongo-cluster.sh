@@ -56,6 +56,8 @@ docker exec -it mongo-beijing-router bash -c "echo '\
     sh.disableBalancing(\"thu-ddbs.user\")
     sh.disableBalancing(\"thu-ddbs.article\")
     sh.disableBalancing(\"thu-ddbs.read\")
+    sh.disableBalancing(\"thu-ddbs.popularRank\")
+    sh.disableBalancing(\"thu-ddbs.beRead\")
     sh.enableSharding(\"thu-ddbs\")
     sh.addShardTag(\"beijing-shard-rs\", \"BJ\")
     sh.addShardTag(\"hong-kong-shard-rs\", \"HK\")
