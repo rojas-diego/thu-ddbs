@@ -8,7 +8,7 @@ docker exec -it mongo-beijing-config bash -c "echo '\
             {_id: 0, host: \"mongo-beijing-config\"}, \
             {_id: 1, host: \"mongo-hong-kong-config\"}, \
         ]} \
-    )' | mongo"
+    )' | mongosh"
 
 echo '------- mongo-beijing-shard-1 -------'
 echo '> Register beijing shard replica set...'
@@ -18,7 +18,7 @@ docker exec -it mongo-beijing-shard-1 bash -c "echo '\
             {_id: 0, host: \"mongo-beijing-shard-1\"}, \
             {_id: 1, host: \"mongo-beijing-shard-2\"}, \
         ]} \
-    )' | mongo"
+    )' | mongosh"
 
 echo '------- mongo-hong-kong-shard-1 -------'
 echo '> Register hong kong shard replica set...'
@@ -28,7 +28,7 @@ docker exec -it mongo-hong-kong-shard-1 bash -c "echo '\
             {_id: 0, host: \"mongo-hong-kong-shard-1\"}, \
             {_id: 1, host: \"mongo-hong-kong-shard-2\"}, \
         ]} \
-    )' | mongo"
+    )' | mongosh"
 
 echo '------- mongo-shared-shard-1 -------'
 echo '> Register shared shard replica set...'
@@ -37,7 +37,7 @@ docker exec -it mongo-shared-shard-1 bash -c "echo '\
         {_id: \"shared-shard-rs\", members: [ \
             {_id: 0, host: \"mongo-shared-shard-1\"} \
         ]} \
-    )' | mongo"
+    )' | mongosh"
 
 echo '------- Wait ... -------'
 echo '> Waiting for cluster to be ready...'
@@ -48,7 +48,7 @@ echo '> Register shards in database...'
 docker exec -it mongo-beijing-router bash -c "echo '\
     sh.addShard(\"beijing-shard-rs/mongo-beijing-shard-1,mongo-beijing-shard-2\")
     sh.addShard(\"hong-kong-shard-rs/mongo-hong-kong-shard-1,mongo-hong-kong-shard-2\")
-    sh.addShard(\"shared-shard-rs/mongo-shared-shard-1\")' | mongo"
+    sh.addShard(\"shared-shard-rs/mongo-shared-shard-1\")' | mongosh"
 
 echo '------- mongo-beijing-router -------'
 echo '> Configure thu-ddbs database and collections...'
@@ -100,4 +100,4 @@ docker exec -it mongo-beijing-router bash -c "echo '\
     sh.moveChunk(\"thu-ddbs.popularRank\", {granularity:\"weekly\"}, \"hong-kong-shard-rs\")
     sh.moveChunk(\"thu-ddbs.popularRank\", {granularity:\"monthly\"}, \"hong-kong-shard-rs\")
 
-    ' | mongo"
+    ' | mongosh"

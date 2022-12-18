@@ -17,7 +17,7 @@ services:
       - minio:/data/minio
 
   mongo-beijing-router:
-    image: mongo
+    image: mongo:5.0.9
     container_name: mongo-beijing-router
     hostname: mongo-beijing-router
     command: mongos --configdb config-rs/mongo-beijing-config:27017,mongo-hong-kong-config:27017 --bind_ip_all --port 27017
@@ -31,7 +31,7 @@ services:
     restart: always
 
   mongo-hong-kong-router:
-    image: mongo
+    image: mongo:5.0.9
     container_name: mongo-hong-kong-router
     hostname: mongo-hong-kong-router
     command: mongos --configdb config-rs/mongo-beijing-config:27017,mongo-hong-kong-config:27017 --bind_ip_all --port 27017
@@ -45,7 +45,7 @@ services:
     restart: always
 
   mongo-beijing-config:
-    image: mongo
+    image: mongo:5.0.9
     container_name: mongo-beijing-config
     hostname: mongo-beijing-config
     command: mongod --configsvr --replSet config-rs --port 27017 --dbpath /data/db
@@ -57,7 +57,7 @@ services:
     restart: always
 
   mongo-hong-kong-config:
-    image: mongo
+    image: mongo:5.0.9
     container_name: mongo-hong-kong-config
     hostname: mongo-hong-kong-config
     command: mongod --configsvr --replSet config-rs --port 27017 --dbpath /data/db
@@ -69,7 +69,7 @@ services:
     restart: always
 
   mongo-shared-shard-1:
-    image: mongo
+    image: mongo:5.0.9
     container_name: mongo-shared-shard-1
     hostname: mongo-shared-shard-1
     command: mongod --shardsvr --replSet shared-shard-rs --port 27017 --dbpath /data/db
@@ -81,7 +81,7 @@ services:
     restart: always
 
   mongo-beijing-shard-1:
-    image: mongo
+    image: mongo:5.0.9
     container_name: mongo-beijing-shard-1
     hostname: mongo-beijing-shard-1
     command: mongod --shardsvr --replSet beijing-shard-rs --port 27017 --dbpath /data/db
@@ -93,7 +93,7 @@ services:
     restart: always
 
   mongo-beijing-shard-2:
-    image: mongo
+    image: mongo:5.0.9
     container_name: mongo-beijing-shard-2
     hostname: mongo-beijing-shard-2
     command: mongod --shardsvr --replSet beijing-shard-rs --port 27017 --dbpath /data/db
@@ -105,7 +105,7 @@ services:
     restart: always
 
   mongo-hong-kong-shard-1:
-    image: mongo
+    image: mongo:5.0.9
     container_name: mongo-hong-kong-shard-1
     hostname: mongo-hong-kong-shard-1
     command: mongod --shardsvr --replSet hong-kong-shard-rs --port 27017 --dbpath /data/db
@@ -117,7 +117,7 @@ services:
     restart: always
 
   mongo-hong-kong-shard-2:
-    image: mongo
+    image: mongo:5.0.9
     container_name: mongo-hong-kong-shard-2
     hostname: mongo-hong-kong-shard-2
     command: mongod --shardsvr --replSet hong-kong-shard-rs --port 27017 --dbpath /data/db
