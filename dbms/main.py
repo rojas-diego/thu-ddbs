@@ -3,12 +3,15 @@ from utils import prompt as default_prompt
 from database_utils import *
 from rich import print as pprint
 from rich.prompt import Prompt
+from rich.text import Text
+from rich.panel import Panel
+import requests
 import redis
 import os
 
 
 def list_something(db, username, r):
-    answer = default_prompt("What do you wanna list ?\n1. Users\n2. Articles\n3. Read\n4. Be-read", ["1", "2", "3", "4"])
+    answer = default_prompt("What do you wanna list ?\n1. Users\n2. Articles", ["1", "2"])
     if answer == "1":
         users = list_users(db, r)
         for i in users:
@@ -17,10 +20,6 @@ def list_something(db, username, r):
         articles = list_articles(db, r)
         for i in articles:
             display_article(i)
-    if answer == "3":
-        pass
-    if answer == "4":
-        pass
 
 def search_for_something(db, username, r):
     answer_t = default_prompt("What do you wanna search ?\n1. User\n2. Article\n3. Top articles", ["1", "2", "3"])
@@ -52,11 +51,10 @@ def search_for_something(db, username, r):
     call = lambda: obj.find(params)
     result = cache_redis(call, answer_t + str(params), r)
 
-    for i in result:
-        if obj == db.user:
-            display_user(i)
-        if obj == db.article:
-            display_article(i)
+    if obj == db.user:
+        display_user_table(result)
+    if obj == db.article:
+        display_article_table(result)
 
 def update_something(db, username, r):
     while True:
@@ -72,12 +70,33 @@ def update_something(db, username, r):
             db.article.update_many({"title": change_title}, {"$set": {"abstract": change_abstract}})
             break
 
-def create_something(db, username):
-    pass
+def display_specific_article(db, username, r):
+    id = input("Enter article ID: ")
+    article = db.article.find({"_id":id})
+    call = lambda: db.user.find({"name":username})
+    user = cache_redis(call, username, r)[0]
+
+    for i in article:
+        print("Title: " + i["title"])
+        pprint(Panel(Text(requests.get(os.environ["DBMS_OBJECT_STORAGE_PREFIX"] + "bbc_news_texts/" + i["text"]).text, justify="full")))
+        if "image" in i.keys():
+            print("Image link: " + os.environ["DBMS_OBJECT_STORAGE_PREFIX"] + "image/" + i["image"])
+        if "video" in i.keys():
+            print("Video link: " + os.environ["DBMS_OBJECT_STORAGE_PREFIX"] + "video/" + i["video"])
+        read_row = {'uid':user["_id"], 'aid': id, 'region':user["region"], 'category':i["category"], 'readTimeLength': 96, 'agreeOrNot': True, 'commentOrNot': False,'shareOrNot': False, 'commentDetail': 'comments to this article: (' + user["_id"] + "," + id + ')'}
+        db.read.insert_one(read_row)
+
+        call = lambda: db.beRead.find({"_id":id})
+        br = cache_redis(call, "br"+id, r)[0]
+        new_readUidList = br["readUidList"]
+        if user["_id"] not in new_readUidList:
+            new_readUidList.append(user["_id"])
+        db.beRead.update_many({"_id":id}, {"$set": {"readNum":br["readNum"]+1, "readUidList":new_readUidList}})
+
 
 def loop_action(db, username, r):
     while True:
-        answer = default_prompt("Select an action:\n1. List\n2. Search\n3. Modify\n4. Disconnect", ["1", "2", "3", "4"])
+        answer = default_prompt("Select an action:\n1. List\n2. Search\n3. Modify\n4. Display an article\n5. Disconnect", ["1", "2", "3", "4", "5"])
         if answer == "1":
             list_something(db, username, r)
         if answer == "2":
@@ -85,6 +104,8 @@ def loop_action(db, username, r):
         if answer == "3":
             update_something(db, username, r)
         if answer == "4":
+            display_specific_article(db, username, r)
+        if answer == "5":
             return
 
 if __name__ == "__main__":
