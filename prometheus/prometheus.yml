@@ -1,0 +1,23 @@
+scrape_configs:
+  - job_name: mongodb-exporter
+    metrics_path: /metrics
+    honor_labels: false
+    honor_timestamps: true
+    scheme: http
+    follow_redirects: true
+    static_configs:
+      - targets: ["mongo-prometheus-exporter:9216"]
+  - job_name: prometheus
+    metrics_path: /metrics
+    honor_labels: false
+    honor_timestamps: true
+    scheme: http
+    follow_redirects: true
+    static_configs:
+      - targets: ["localhost:9090"]
+  - job_name: minio
+    bearer_token: eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjQ4MjUwMzI3NTMsImlzcyI6InByb21ldGhldXMiLCJzdWIiOiJhZG1pbiJ9.wiPh4_PZjS9fyA5CQghLG8fFkPpRMdV05c3_hJXaifaWYYxrTEFSXviA49gWxqLA2hjRV1MIGRUmWLEB7sZOeg
+    metrics_path: /minio/v2/metrics/cluster
+    scheme: http
+    static_configs:
+      - targets: ["minio:9000"]
